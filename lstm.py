@@ -1,3 +1,5 @@
+import tensorflow as tf
+tf.get_logger().setLevel('ERROR') #added to suppress warnings for more comprehendable printing
 import matplotlib
 import sklearn.metrics
 matplotlib.use("TkAgg")
@@ -21,7 +23,7 @@ training_set, testing_set = imdb.load_data(num_words=10000)
 training_padded = sequence.pad_sequences(training_set[0], maxlen=100)
 testing_padded = sequence.pad_sequences(testing_set[0], maxlen=100)
 
-hyperparameters = {'output_dim': 32, 'batch_size': 128, 'epochs': 5}
+hyperparameters = {'output_dim': 64, 'batch_size': 64, 'epochs': 5}    #defining hyperparameters
 
 def train_model(Optimizer, X_train, y_train, X_val, y_val):
     # Model Building
@@ -33,32 +35,44 @@ def train_model(Optimizer, X_train, y_train, X_val, y_val):
     # Train Model
     model.compile(optimizer=Optimizer, loss='binary_crossentropy', metrics=['accuracy'])
     print(model.summary())
-    model.fit(X_train,y_train,batch_size=hyperparameters['batch_size'],epochs=hyperparameters['epochs'],validation_data=(X_val,y_val))
-    return model
+    trained_model=model.fit(X_train,y_train,batch_size=hyperparameters['batch_size'],epochs=hyperparameters['epochs'],validation_data=(X_val,y_val))
+    return model, trained_model
 
-def model_prediction(X_val,y_val):
-    model=train_model(RMSprop(lr=0.1), training_padded, training_set[1], testing_padded, testing_set[1])
+def model_prediction(model, X_val, y_val):  #makes prediction on testing data based off trained model
     print("EVALUATING MODEL ACCURACY ON TESTING DATA")
-    testing_predictions=model.predict(X_val)
-    predictions=[1 if pred > 0.5 else 0 for pred in testing_predictions]
-    correct=(predictions==y_val).sum()
-    accuracy="{:.2f}".format((correct/len(y_val))*100)
+    make_prediction=model.predict(X_val)
+    testing_predictions=[1 if pred > 0.5 else 0 for pred in make_prediction]    #setting predictions to either 1(positive) or 0(negative)
+    correct=(testing_predictions==y_val).sum()  #counts number of predictions that were correct
+    accuracy="{:.2f}".format((correct/len(y_val))*100) #turns prediction into percentage
     print(f"accuracy: {accuracy}%")
+    return testing_predictions
 
+#gets base model and trained model
+model, trained_model=train_model(RMSprop(lr=0.1), training_padded, training_set[1], testing_padded, testing_set[1])
 
+#gets list of predictions from testing data
+testing_predictions=model_prediction(model, testing_padded, testing_set[1])
 
-model_prediction(testing_padded, testing_set[1])
+#allows us to display 2 graphs
+fig, axs = plt.subplots(2,1,figsize=(8,8))
+
 # Plot accuracy per epoch
-    # accuracy_history=model.history['acc']
-    # epochs=list(range(1,hyperparameters['epochs']+1))
-    # epoch_accuracy_graph=sns.stripplot(epochs,accuracy_history)
-    # epoch_accuracy_graph.set(xlabel='Epoch',ylabel='Accuracy')
-    # plt.title('Epoch Accuracy')
-    # plt.show()
+history=[acc*100 for acc in trained_model.history['acc']]   #turns accuracy into percentage
+epochs=list(range(1,hyperparameters['epochs']+1))
+epoch_accuracy_graph=sns.stripplot(epochs,history,ax=axs[0])
+epoch_accuracy_graph.set(xlabel='Epoch',ylabel='Accuracy(%)')
+axs[0].set_title('Epoch Accuracy Progression for Training Data')
 
 # Plot confusion matrix
+cm=confusion_matrix(testing_set[1],testing_predictions)
+for i in range(len(cm)):    #turns total for each square into percentage
+    for j in range(len(cm[0])):
+        cm[i][j]=(cm[i][j]/25000) * 100
+sns.heatmap(cm, annot=True, cbar=False, fmt=".2f", ax=axs[1])
+axs[1].set_title('Percentage Confusion Matrix for Testing Data Predictions')
+plt.xlabel('Predicted Labels')
+plt.ylabel('Real Labels')
+plt.tight_layout()
+plt.show()
 
 
-# Embedding layer https://keras.io/2.16/api/layers/core_layers/embedding/ https://www.tensorflow.org/api_docs/python/tf/keras/layers/Embedding
-# LSTM layer https://keras.io/2.16/api/layers/recurrent_layers/lstm/ https://www.tensorflow.org/api_docs/python/tf/keras/layers/LSTM
-# Dense layer https://keras.io/2.16/api/layers/core_layers/dense/ https://www.tensorflow.org/api_docs/python/tf/keras/layers/Dense
