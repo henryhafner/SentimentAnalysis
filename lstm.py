@@ -1,5 +1,7 @@
 import tensorflow as tf
-tf.get_logger().setLevel('ERROR') #added to suppress warnings for more comprehendable printing
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'    #added to suppress warnings for more comprehendable printing 
+tf.get_logger().setLevel('ERROR') 
 import matplotlib
 import sklearn.metrics
 matplotlib.use("TkAgg")
@@ -23,7 +25,12 @@ training_set, testing_set = imdb.load_data(num_words=10000)
 training_padded = sequence.pad_sequences(training_set[0], maxlen=100)
 testing_padded = sequence.pad_sequences(testing_set[0], maxlen=100)
 
-hyperparameters = {'output_dim': 64, 'batch_size': 128, 'epochs': 5}    #defining hyperparameters
+#splitting training data up into training and validation
+data_split = int(0.80*len(training_padded))
+val_split_data, val_split_labels = training_padded[data_split:],training_set[1][data_split:]
+train_split_data, train_split_labels = training_padded[:data_split],training_set[1][:data_split] 
+
+hyperparameters = {'output_dim': 64, 'batch_size': 256, 'epochs': 10}    #defining hyperparameters
 
 def train_model(Optimizer, X_train, y_train, X_val, y_val):
     # Model Building
@@ -35,12 +42,12 @@ def train_model(Optimizer, X_train, y_train, X_val, y_val):
     # Train Model
     model.compile(optimizer=Optimizer, loss='binary_crossentropy', metrics=['accuracy'])
     print(model.summary())
-    trained_model=model.fit(X_train,y_train,batch_size=hyperparameters['batch_size'],epochs=hyperparameters['epochs'],validation_data=(X_val,y_val))
+    trained_model=model.fit(X_train,y_train,batch_size=hyperparameters['batch_size'],epochs=hyperparameters['epochs'], validation_data=(X_val, y_val))
     return model, trained_model
 
-def model_evaluation(model, X_val, y_val):  #makes evaluation on testing data based off trained model
+def model_evaluation(model, X_test, y_test):  #makes evaluation on testing data based off trained model
     print("EVALUATING MODEL ON TESTING DATA")
-    loss, accuracy = model.evaluate(testing_padded, testing_set[1])
+    loss, accuracy = model.evaluate(X_test, y_test, verbose=2)
     accuracy="{:.2f}".format(accuracy*100) #turns accuracy into percentage
     loss="{:.2f}".format(loss*100) #turns accuracy into percentage
     print(f"Loss: {loss}%")
@@ -49,7 +56,7 @@ def model_evaluation(model, X_val, y_val):  #makes evaluation on testing data ba
 
 
 #gets base model and trained model and prints out model evaluation
-model, trained_model=train_model(RMSprop(lr=0.1), training_padded, training_set[1], testing_padded, testing_set[1])
+model, trained_model=train_model(RMSprop(lr=0.1), train_split_data, train_split_labels, val_split_data, val_split_labels)
 model_evaluation(model, testing_padded, testing_set[1])
 
 #gets list of predictions from testing data
