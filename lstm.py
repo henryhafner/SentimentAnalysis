@@ -53,14 +53,14 @@ def model_evaluation(model, X_test, y_test):  #makes evaluation on testing data 
     print(f"Loss: {loss}%")
     print(f"Accuracy: {accuracy}%")
     print("CREATING GRAPHS")
-
+    
 
 #gets base model and trained model and prints out model evaluation
 model, trained_model=train_model(RMSprop(lr=0.1), train_split_data, train_split_labels, val_split_data, val_split_labels)
 model_evaluation(model, testing_padded, testing_set[1])
 
 #gets list of predictions from testing data
-testing_predictions=[1 if pred > 0.5 else 0 for pred in model.predict(testing_padded)]
+testing_predictions=[1 if pred > 0.5 else 0 for pred in model.predict(testing_padded, batch_size=hyperparameters['batch_size'])]
 
 #allows us to display 2 graphs
 fig, axs = plt.subplots(2,1,figsize=(8,8))
