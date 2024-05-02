@@ -16,11 +16,14 @@ def display_entries(dataset, nums):
         english = " ".join(reversed_word_index.get(i) for i in dataset_data[num])   #translates ints to words with reverse dict
         print("English review: ",english)
         if dataset_labels[num]==1:  #checks if sentiment was positive or negative
-            print("Sentiment: Positive")
+            print("Sentiment: Positive\n")
         else:
-            print("Sentiment: Negative")
+            print("Sentiment: Negative\n")
 
 # ** Test code here
 display_entries(training_set, [6,10,159,169,45])
-display_entries(testing_set, [6,10,159,169,45]) 
+display_entries(testing_set, [6,10,159,169,45])
+# used for presentation examples
+# display_entries(training_set, [159]) 
+# display_entries(testing_set, [10]) 
 
