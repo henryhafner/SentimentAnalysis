@@ -30,7 +30,7 @@ data_split = int(0.80*len(training_padded))
 val_split_data, val_split_labels = training_padded[data_split:],training_set[1][data_split:]
 train_split_data, train_split_labels = training_padded[:data_split],training_set[1][:data_split] 
 
-hyperparameters = {'output_dim': 64, 'batch_size': 512, 'epochs': 20}    #defining hyperparameters
+hyperparameters = {'output_dim': 64, 'batch_size': 512, 'epochs': 10}    #defining hyperparameters
 
 def train_model(Optimizer, X_train, y_train, X_val, y_val):
     # Model Building
@@ -41,7 +41,7 @@ def train_model(Optimizer, X_train, y_train, X_val, y_val):
     
     # Train Model
     model.compile(optimizer=Optimizer, loss='binary_crossentropy', metrics=['accuracy'])
-    print(model.summary())
+    model.summary()
     trained_model=model.fit(X_train,y_train,batch_size=hyperparameters['batch_size'],epochs=hyperparameters['epochs'], validation_data=(X_val, y_val))
     return model, trained_model
 
@@ -63,7 +63,8 @@ model_evaluation(model, testing_padded, testing_set[1])
 #gets list of predictions from testing data
 testing_predictions=[1 if pred > 0.5 else 0 for pred in model.predict(testing_padded, batch_size=hyperparameters['batch_size'])]
 
-#allows us to display 2 graphs
+
+# allows us to display 2 graphs
 fig, axs = plt.subplots(2,1,figsize=(8,8))
 
 # Plot accuracy per epoch

@@ -4,9 +4,9 @@ training_set, testing_set = imdb.load_data(index_from = 3)
 
 word_index=imdb.get_word_index()    #dict that maps words to ints
 reversed_word_index = {index+3: word for word,index in word_index.items()}  #reverses word_index to map ints to words and accounts for index_from
-reversed_word_index[0] = "[padding]"    #inserts padding
-reversed_word_index[1] = "[start]"  
-reversed_word_index[2] = "[oov]"
+
+reversed_word_index[1] = "[start]" #indicates start of the review  
+  
 
 def display_entries(dataset, nums):
     # **ADD YOUR CODE HERE **
